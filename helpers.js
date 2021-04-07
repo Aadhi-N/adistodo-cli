@@ -7,7 +7,7 @@ function help() {
 
   Commands:
   <add> <task [...tasks]> - must wrap in strings
-  <edit> [task index number] [task description] [check: true | false] - edit task description
+  <edit> [task index number] [task description] [check: true | false] - edit task description; by default, if true/false not supplied, it's false
   <delete>
   <list>
   <help>
