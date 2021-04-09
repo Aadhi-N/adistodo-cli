@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 
 var fs = require('fs');
+const TASK_STORAGE_PATH = './adistodo-database.json';
+
+
 const { get } = require('http');
 const {help} = require('./helpers.js');
 
-const TASK_STORAGE_PATH = './adistodo-database.json';
 
 /* Create db json file if not present */
 // find way to run once program initiated, not at every instance
@@ -52,13 +54,31 @@ async function add(tasks) {
   list();
 };
 
+
+
+/* Delete task */
+async function del(task) {
+  const taskIndex = await validateTaskIndex(task[0]);
+  switch (taskIndex.exists) {
+    case true:
+      const data = await getData();
+      data.splice(taskIndex.index, 1);
+      return saveData(data);
+    case false:
+      return console.log(`Error: "${task}" is not a valid index number for deletion.`);
+  }
+};
+
+
 /* Edit task */
 async function edit(task) {
-  const taskIsValid = await validate(task[0]);
+  const taskIndex = await validateTaskIndex(task[0]);
+  let taskCompletionStat = task[1];
+  let taskDescription = null;
   const data = await getData();
   let arr;
 
-  console.log('edit', task)
+  console.log('edit', task.length)
 
   // 2 if statements; store results in array; print results as return object
   // ONLY accept 3 arguments; 
@@ -66,25 +86,36 @@ async function edit(task) {
   //if 2nd argument is "true/false", mark completed as true/false
   //if arguments empty, throw error - supply correct info
   
-  if (taskIsValid.status) {
-
+  if (taskIndex.exists === true) {
+    arr = console.log('No edit provided');
   } else {
      arr = console.log(`Error: Task number "${task[0]}" does not exist. Please provide the correct index number to make an edit.`)
   }
 
+  //provided input is "edit 0 `new edit` false"
   if (task.length === 3) {
-    console.log('check', taskComplete)
+    taskDescription = task[1];
+    taskCompletionStat = convertToBool(task[2]);
 
+    if (taskCompletionStat === null) {
+      arr = console.log('Error, provide true or false for completion stat in argument');
+    } else {
+      data[taskIndex.index]["Task Description"] = taskDescription;
+      data[taskIndex.index].Completed = taskCompletionStat;
+      saveData(data);
+    }
 
+    //provided input is "edit 0 false"
   } else if (task.length === 2) {
-      taskComplete = convertToBool(task[1]);
-      if (typeof taskComplete === "boolean") {
-        data[taskIsValid.index].Completed = taskComplete;
+      taskCompletionStat = convertToBool(task[1]);
+      
+      if (typeof taskCompletionStat === "boolean") {
+        data[taskIndex.index].Completed = taskCompletionStat;
         return saveData(data);
       } 
-
-      if (taskComplete === null) {
-        data[taskIsValid.index]["Task Description"] = task[1];
+      //provided input is "edit 0 `new edit`"
+      if (taskCompletionStat === null) {
+        data[taskIndex.index]["Task Description"] = task[1];
         return saveData(data);
       }
 
@@ -105,52 +136,33 @@ function convertToBool(string) {
   return (match === null) ? null : (match.toString() === "true") ? true : false
 };
 
-function taskStatus() {
-  
-}
-
-//edit 0 "edited" false
-// edit 0 = supply new task description to edit
-//edit 0 "edited"
-//edit 0 true 
 
 /* Validate if first arg after command is valid integer */
-async function validate(taskIdx) {
+//input is a string e.g. '2'
+async function validateTaskIndex(taskIdx) {
   const data = await getData(),
         index = Number(taskIdx),
-        taskIsValid = {status: null, index};
+        taskIndex = {exists: null, index};
    
   // Validate index number by type and existence in database -->
   switch(!isNaN(index) || Number.isInteger(index)) { //if number is true number type and integer
     case true:
-      switch(data[index] !== undefined) { //does number exist in db
+      switch(data[index] !== undefined) { //does number exist in db?
         case true: //exists in db
-          taskIsValid.status = true; 
+          taskIndex.exists = true; 
           break;
         case false: //doesnt exist in db
-          taskIsValid.status = false; 
+          taskIndex.exists = false; 
           break;
       }
       break;
     case false: //number is not type number
-      taskIsValid.status = false;
+      taskIndex.exists = false;
       break;
   }
+  // console.log('t', taskIndex)
 
-    return taskIsValid;
-};
-
-/* Delete task */
-async function del(task) {
-  const taskIsValid = await validate(task[0]);
-  switch (taskIsValid.status) {
-    case true:
-      const data = await getData();
-      data.splice(taskIsValid.index, 1);
-      return saveData(data);
-    case false:
-      return console.log(`Error: "${task}" is not a valid index number for deletion.`);
-  }
+    return taskIndex;
 };
 
 
