@@ -1,15 +1,18 @@
-import fs from 'fs';
-const TASK_STORAGE_PATH = './db/adistodo-database.json';
-
 import { getData, saveData, validateTaskIndex, convertToBool } from './helpers.js';
 
 /* Add task(s) */
 async function add(argument) {
-  const data = await getData();
-  argument.forEach(item => {
-    data.push({["Task Description"]: item, Completed: false});
-  });
-  saveData(data);
+  try {
+    const data = await getData();
+    argument.forEach(item => {
+      data.push({["Task Description"]: item, Completed: false});
+      console.log(`Added task --> Description: ${item}`)
+    });
+    saveData(data);
+  } catch (err) {
+    console.log(`Error: `, err);
+  }
+  
 };
 
 /* Delete task */
@@ -18,8 +21,8 @@ async function del(argument) {
   switch (taskIndex.exists) {
     case true:
       const data = await getData();
+      console.log(`Deleted task index #${taskIndex.index} --> Description: ${data[taskIndex.index]["Task Description"]}`);
       data.splice(taskIndex.index, 1);
-      console.log(`Deleting task index #${taskIndex.index}...`)
       return saveData(data);
     case false:
       return console.log(`Error: "${argument}" is not a valid index number for deletion.`);
@@ -42,7 +45,7 @@ async function edit(argument) {
     return consoleOutputMsg = console.log(`Error: Please provide a description for your task to edit. (E.g. $adistodo edit 1 "editing this file" false)`);
   } 
   if (!taskIndex.exists) {
-    return consoleOutputMsg = console.log(`Error: Task number "${taskIndex.index}" does not exist. Please provide the correct index number to make an edit.`)
+    return consoleOutputMsg = console.log(`Error: Task number "${argument[0]}" does not exist. Please provide the correct index number to make an edit.`)
   }
 
   // Provided input = 3 arguments
@@ -53,7 +56,7 @@ async function edit(argument) {
     consoleOutputMsg = console.log(`Edited task #${taskIndex.index} --> Description: "${secondArg}", Completion Status: "${taskCompletionStat}"`)
 
     if (taskCompletionStat === null) { // Input for task completion (true|false) validated as not of type Truthy or Falsy
-      return consoleOutputMsg = console.log('Error, provide `true` or `false` in your last argument to assign task completion status. E.g.:.....');
+      return consoleOutputMsg = console.log(`Error, provide "true" or "false" in your last argument to assign task completion status.`);
     } else {
       data[taskIndex.index]["Task Description"] = taskDescription;
       data[taskIndex.index].Completed = taskCompletionStat;

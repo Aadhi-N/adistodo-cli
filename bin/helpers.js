@@ -1,19 +1,32 @@
 import fs from 'fs';
-const TASK_STORAGE_PATH = './db/adistodo-database.json';
-
+// import { promises as fs } from 'fs';
+import { getPath } from './scripts.js';
+let TASK_STORAGE_PATH;
 
 /* Get data from database.json */
-function getData() {
-  return new Promise((resolve) => resolve(fs.readFileSync(TASK_STORAGE_PATH))).then(data => {return JSON.parse(data)})
+async function getData() {
+  try {
+    TASK_STORAGE_PATH = await getPath();
+    return new Promise((resolve) => {
+      return resolve(fs.readFileSync(TASK_STORAGE_PATH))}).then(data => {return JSON.parse(data)})
+  } 
+  catch (err) {
+    console.log(`Error: getData(): `, err);
+  }
+  
 };
+
+// return new Promise((resolve) => {
+//   resolve(fs.readFileSync(TASK_STORAGE_PATH))}).then(data => {return JSON.parse(data)})
+// }
 
 /* Save data by stringifying and writing to file */
 async function saveData(data) {
+  TASK_STORAGE_PATH = await getPath();
   fs.writeFileSync(TASK_STORAGE_PATH, JSON.stringify(data));
   console.log(`Saved to database.`)
   list();
 };
-
 
 /* List all tasks */
 async function list() {
@@ -53,37 +66,41 @@ async function validateTaskIndex(strTaskIndex) {
 function convertToBool(string) {
   let regex=/^\s*(true|false)\s*$/g // Match with string "true" or "false"; Excludes case-sensitive and white space; Match returns true
   let match = string.match(regex);
-
   // If string contains true or false, return in boolean form, else return null
   return (match === null) ? null : (match.toString() === "true") ? true : false
 };
 
-
 /* Provide usage instructions */
 function help() {
   return console.log(`
-  Usage
-  $ adistodo <add|edit|list|delete|help>  [task]
 
-  Commands:
-  <add> <task [...tasks]> - must wrap in strings
-  <edit> [task index number] [task description] [check: true | false] - edit task description; by default, if true/false not supplied, it's false
-  <delete>
-  <list>
-  <help>
+  \x1b[36mAdistodo:\x1b[0m
+    A NodeJS cli task management app. 
 
-  Examples
-  $ adistodo add "pick up groceries"
+  \x1b[36mUsage:\x1b[0m
+    $ adistodo <add|edit|list|delete|help> <index> [task] [{true|false}]
 
-  // 2 if statements; store results in array; print results as return object
-  // ONLY accept 3 arguments; 
-  //if 3rd argument is undefined, mark as default "false"
-  //if 2nd argument is "true/false", mark completed as true/false
-  //if arguments empty, throw error - supply correct info
-  
+  \x1b[36mAvailable Commands:\x1b[0m
+    <add> <task>...                       # Add task. Add 1 or more tasks, separated by strings, for each task to be saved separately.
+                                            Default completion status is false.  
+
+    <edit> <index> [task] [{true|false}]  # Edit task. Provide index number of task to edit. 
+                                            Provide a new task description to replace with, and/or optional completion status.
+    
+    <list>                                # List all tasks.
+    
+    <delete> <index>                      # Delete task. Provide index number of task to delete.
+    
+    <help>                                # Opens command line usage guide. 
+
+  \x1b[36mExamples:\x1b[0m
+  $ adistodo add "buy green apples"
+  $ adistodo add "buy green apples" "check mail"
+  $ adistodo edit 1 "buy red apples" 
+  $ adistodo edit 1 true
+  $ adistodo delete 1
 
   `)
 };
-
 
 export { getData, saveData, list, validateTaskIndex, convertToBool, help };
