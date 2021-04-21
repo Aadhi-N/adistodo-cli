@@ -1,10 +1,10 @@
-import { getData, saveData, validateTaskIndex, convertToBool } from './helpers.js';
+import { getData, saveData, validateTaskIndex, checkTaskStatus } from './helpers.js';
 
 /* Add task(s) */
-async function add(argument) {
+async function add(args) {
   try {
     const data = await getData();
-    argument.forEach(item => {
+    args.forEach(item => {
       data.push({["Task Description"]: item, Completed: false});
       console.log(`Added task --> Description: ${item}`)
     });
@@ -16,8 +16,8 @@ async function add(argument) {
 };
 
 /* Delete task */
-async function del(argument) {
-  const taskIndex = await validateTaskIndex(argument[0]);
+async function del(args) {
+  const taskIndex = await validateTaskIndex(args[0]);
   switch (taskIndex.exists) {
     case true:
       const data = await getData();
@@ -25,56 +25,58 @@ async function del(argument) {
       data.splice(taskIndex.index, 1);
       return saveData(data);
     case false:
-      return console.log(`Error: "${argument}" is not a valid index number for deletion.`);
+      return console.error(`Error: "${args}" is not a valid index number for deletion.`);
   }
 };
 
 /* Edit task */
-async function edit(argument) {
-  const taskIndex = await validateTaskIndex(argument[0]),
+async function edit(args) {
+  console.log('edit args', args)
+
+  const taskIndex = await validateTaskIndex(args[0]),
         data = await getData();
-  let secondArg = argument[1],
-      thirdArg = argument[2],
-      taskCompletionStat,
+  let secondArg = args[1], //confusing //argsS
+      thirdArg = args[2],
+      taskStatus,
       taskDescription,
       consoleOutputMsg;
 
-  // Provided input = 1 argument
-  // Format: `<edit><0>`
+  // Provided input = 1 args
+  // Format: `<edit> <0>`
+  if (!taskIndex.exists) {
+    return consoleOutputMsg = console.log(`Error: Task number "${args[0]}" does not exist. Please provide the correct index number to make an edit.`)
+  }
   if (taskIndex.exists && !secondArg?.length) { // Is secondArg.length falsy
     return consoleOutputMsg = console.log(`Error: Please provide a description for your task to edit. (E.g. $adistodo edit 1 "editing this file" false)`);
   } 
-  if (!taskIndex.exists) {
-    return consoleOutputMsg = console.log(`Error: Task number "${argument[0]}" does not exist. Please provide the correct index number to make an edit.`)
-  }
 
-  // Provided input = 3 arguments
-  // Format: `<edit><index><description>[true|false]`
-  if (taskIndex.exists && secondArg?.length && thirdArg?.length) {
+  // Provided input = 3 argss
+  // Format: `<edit> <index> <description> [true|false]`
+  if (taskIndex.exists && secondArg?.length && thirdArg?.length) { //argss.length === 3
     taskDescription = secondArg;
-    taskCompletionStat = convertToBool(thirdArg);
-    consoleOutputMsg = console.log(`Edited task #${taskIndex.index} --> Description: "${secondArg}", Completion Status: "${taskCompletionStat}"`)
-
-    if (taskCompletionStat === null) { // Input for task completion (true|false) validated as not of type Truthy or Falsy
-      return consoleOutputMsg = console.log(`Error, provide "true" or "false" in your last argument to assign task completion status.`);
+    taskStatus = checkTaskStatus(thirdArg);
+    
+    if (taskStatus === null) { // Input for task completion (true|false) validated as not of type Truthy or Falsy
+      return consoleOutputMsg = console.log(`Error, provide "true" or "false" in your last args to assign task completion status, or leave empty.`);
     } else {
       data[taskIndex.index]["Task Description"] = taskDescription;
-      data[taskIndex.index].Completed = taskCompletionStat;
-      return saveData(data);
+      data[taskIndex.index].Completed = taskStatus;
+      saveData(data);
+      return console.log(`Edited task #${taskIndex.index} --> Description: "${secondArg}", Completion Status: "${taskStatus}"`)
     }
 
-    // Provided input = 2 arguments
+    // Provided input = 2 argss
   } else if (taskIndex.exists && secondArg?.length && !thirdArg?.length) {
-      taskCompletionStat = convertToBool(secondArg);
+      taskStatus = checkTaskStatus(secondArg);
       consoleOutputMsg = console.log(`Edited task #${taskIndex.index} --> Description: "${secondArg}"`)
       
-      // Format: `<edit><index>[true|false]`
-      if (typeof taskCompletionStat === "boolean") { // Input for task completion (true|false) returned as Truthy or Falsy
-        data[taskIndex.index].Completed = taskCompletionStat;
+      // Format: `<edit> <index> [true|false]`
+      if (typeof taskStatus === "boolean") { // Input for task completion (true|false) returned as Truthy or Falsy
+        data[taskIndex.index].Completed = taskStatus;
         return saveData(data);
       } 
-      // Format: `<edit><index><description>`
-      if (taskCompletionStat === null) {
+      // Format: `<edit> <index> <description>`
+      if (taskStatus === null) {
         data[taskIndex.index]["Task Description"] = secondArg;
         return saveData(data);
       }

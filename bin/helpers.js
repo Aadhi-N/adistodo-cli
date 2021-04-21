@@ -63,12 +63,17 @@ async function validateTaskIndex(strTaskIndex) {
     return taskIndex;
 };
 
-function convertToBool(string) {
-  let regex=/^\s*(true|false)\s*$/g // Match with string "true" or "false"; Excludes case-sensitive and white space; Match returns true
-  let match = string.match(regex);
-  // If string contains true or false, return in boolean form, else return null
-  return (match === null) ? null : (match.toString() === "true") ? true : false
+/* Return boolean or null for string match */
+function checkTaskStatus(string) {
+  if (string.toLowerCase() === "true") {
+    return true;
+  } else if (string.toLowerCase() === "false") {
+    return false;
+  } else {
+    return null;
+  }
 };
+
 
 /* Provide usage instructions */
 function help() {
@@ -100,7 +105,10 @@ function help() {
   $ adistodo edit 1 true
   $ adistodo delete 1
 
+
+  --- INCLUDE - HELP RELATED TO DB: IF IT'S NOT EMPTY ARRAY, OTHER ERRORS ETC. 
+
   `)
 };
 
-export { getData, saveData, list, validateTaskIndex, convertToBool, help };
+export { getData, saveData, list, validateTaskIndex, checkTaskStatus, help };
