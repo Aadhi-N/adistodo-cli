@@ -1,41 +1,39 @@
 #!/usr/bin/env node
 
-import { getPath } from './bin/scripts.js'
-import { list, help } from './bin/helpers.js';
+import { initDatabase } from './bin/scripts.js'
+import { help, getData, list } from './bin/helpers.js';
 import { add, del, edit } from './bin/crud.js';
 
 const input = process.argv.slice(2);
-const [command, ...args] = input.length > 0 ? input : null; //elements after input[0] assigned to args
 
-// console.log(input)
-// console.log('c', command)
-// console.log('a', args)
+const [command, ...args] = input; //elements after input[0] assigned to args
 
-/* Checks if DB exists */
-getPath();
 
 /* Entry point to process input commands */
 switch(command) {
   case "add":
-    args ? add(args) : console.error(`Error: Please provide a task description to add.`)
+    !args.length ? console.error(`Error: Please provide a task description to add.`) : add(args);
     break;
 
   case "edit":
-    args ? edit(args) : console.error(`Error: Please provide an index number to edit.`);
+    !args.length ? console.error(`Error: Please provide an index number to edit.`) : edit(args);
     break;
 
   case "delete":
-    args ? del(args) : console.error(`Error: Please provide an index number to delete.`);
+    !args.length ? console.error(`Error: Please provide an index number to delete.`) : del(args);
     break;
 
   case "list":
-    args ? console.error(`Error: Cannot process any extra arguments for "list".`) : list();
+    !args.length ? list() : console.error(`Error: Cannot process any extra arguments for "list".`);
     break;
 
   case "help":
-    args ? console.error(`Error: Cannot process any extra arguments for "help".`) : help();
+    !args.length ? help() : console.error(`Error: Cannot process any extra arguments for "help".`);
     break;
 
   default:
     console.error(`Error: Please provide a valid input. See "help" for instructions.`)
 };
+
+/* Checks if DB exists */
+initDatabase();
