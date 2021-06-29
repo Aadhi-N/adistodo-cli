@@ -43,6 +43,16 @@ $ adistodo edit 1 true
 $ adistodo delete 1
 ```
 
+### Features
+
+* No external libraries, just pure Javascript
+
+### Future Improvements
+
+* Add interactive command-line interface for alternative, visual experience using a library like Commander.js or Inquirer.js
+* Change database format to be more structured 
+
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
